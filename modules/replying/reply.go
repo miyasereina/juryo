@@ -102,7 +102,7 @@ func autoreply(in string) string {
 }
 
 func roll(reply []string) string {
-	if len(reply) <= 2 {
+	if len(reply) <= 1 {
 		return "这rand尼玛呢rand"
 	}
 	reply = reply[1:]
