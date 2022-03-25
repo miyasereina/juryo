@@ -1,4 +1,4 @@
-module github.com/Logiase/MiraiGo-Template
+module juryo
 
 go 1.17
 

@@ -16,10 +16,10 @@ import (
 	qrcodeTerminal "github.com/Baozisoftware/qrcode-terminal-go"
 	"github.com/tuotoo/qrcode"
 
-	"github.com/Logiase/MiraiGo-Template/config"
-	"github.com/Logiase/MiraiGo-Template/utils"
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/sirupsen/logrus"
+	"juryo/config"
+	"juryo/utils"
 )
 
 // Bot 全局 Bot

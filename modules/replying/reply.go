@@ -9,8 +9,8 @@ import (
 	"github.com/Mrs4s/MiraiGo/message"
 	"gopkg.in/yaml.v2"
 
-	"github.com/Logiase/MiraiGo-Template/bot"
-	"github.com/Logiase/MiraiGo-Template/utils"
+	"juryo/bot"
+	"juryo/utils"
 )
 
 func ReplyInit() {

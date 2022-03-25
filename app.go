@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/Logiase/MiraiGo-Template/modules/logging"
-	"github.com/Logiase/MiraiGo-Template/modules/replying"
+	"juryo/modules/logging"
+	"juryo/modules/replying"
 	"os"
 	"os/signal"
 
-	"github.com/Logiase/MiraiGo-Template/bot"
-	"github.com/Logiase/MiraiGo-Template/config"
-	"github.com/Logiase/MiraiGo-Template/utils"
+	"juryo/bot"
+	"juryo/config"
+	"juryo/utils"
 
-	_ "github.com/Logiase/MiraiGo-Template/modules/logging"
+	_ "juryo/modules/logging"
 )
 
 func init() {
