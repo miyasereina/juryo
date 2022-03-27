@@ -78,7 +78,6 @@ func logGroupMessage(msg *message.GroupMessage) {
 }
 
 func logPrivateMessage(msg *message.PrivateMessage) {
-
 	logger.
 		WithField("from", "PrivateMessage").
 		WithField("MessageID", msg.Id).

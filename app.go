@@ -1,6 +1,8 @@
 package main
 
 import (
+	"juryo/dao"
+	"juryo/models"
 	"juryo/modules/logging"
 	"juryo/modules/replying"
 	"os"
@@ -16,6 +18,8 @@ import (
 func init() {
 	utils.WriteLogToFS(utils.LogInfoLevel, utils.LogWithStack)
 	config.Init()
+	dao.MysqlInit()
+	models.TableInit()
 	replying.ReplyInit()
 	logging.Loginit()
 }
