@@ -115,7 +115,6 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 				switch e := elem.(type) {
 				case *message.GroupImageElement:
 					{
-						fmt.Println(e)
 						k++
 						models.Upload(e, msg.GroupCode)
 						download(e.Url, msg.GroupCode, e.ImageId)
@@ -189,14 +188,14 @@ func download(url string, path int64, fileName string) {
 }
 
 func roll(reply []string) string {
-	var n int32
-	for value, _ := range reply {
-		n = n ^ rune(value)
-	}
-	if len(reply) <= 1 || n == 0 {
+	//var n uint8
+	//for _, value := range reply {
+	//	n = n ^ value=="".(uint8)
+	//}
+	if len(reply) <= 1 /*|| n == 0*/ {
 		return "这rand尼玛呢rand"
 	}
-	return reply[rand.Intn(len(reply)+1)]
+	return reply[rand.Intn(len(reply))]
 }
 
 //func upH(reply []string) string {
