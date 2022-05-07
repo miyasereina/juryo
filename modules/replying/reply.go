@@ -3,13 +3,20 @@ package replying
 import (
 	"bufio"
 	"fmt"
+	"github.com/Mrs4s/MiraiGo/binary"
 	"juryo/models"
+	"log"
+	"regexp"
+	"strings"
 
 	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
+
 	"sync"
+
+	"github.com/robfig/cron"
 
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
@@ -81,27 +88,51 @@ func privateReply(msg *message.PrivateMessage, c *client.QQClient) {
 	}
 }
 
+func re(str string) []string {
+	rand := regexp.MustCompile("/up\\[Reply:.*?\\]")
+	st := rand.FindAllString(str, -1)
+	return st
+}
+
 func groupReply(msg *message.GroupMessage, c *client.QQClient) {
-	if []byte(msg.ToString())[0] != '/' {
-		return
-	}
-	j := 0
-	data := []byte(msg.ToString())
+	cr := cron.New() // 新建一个定时任务对象
+	cr.AddFunc("0 0 8 * * ? ", func() {
+		m := message.NewSendingMessage().Append(message.NewText("妈妈早上好，最喜欢妈妈了妈妈今天也加油哦，快去叫爸爸起床！"))
+		c.SendGroupMessage(735214237, m)
+	}) // 给对象增加定时任务
+	cr.Start()
 	reply := []string{}
-	//双指针遍历还原为数组
-	for i := 0; i <= len(data)-1; i++ {
-		if data[i] == ' ' {
-			str := string(data[j:i])
-			reply = append(reply, str)
-			j = i + 1
-			continue
+	ver := ""
+	if re(msg.ToString()) != nil {
+		fmt.Println(re(msg.ToString()))
+		ver = re(msg.ToString())[0][0:9]
+	} else {
+		if []byte(msg.ToString())[0] != '/' {
+			return
 		}
-		if i == len(data)-1 {
-			str := string(data[j : i+1])
-			reply = append(reply, str)
+		j := 0
+		data := []byte(msg.ToString())
+
+		//双指针遍历还原为数组
+		for i := 0; i <= len(data)-1; i++ {
+			if data[i] == ' ' {
+				str := string(data[j:i])
+				reply = append(reply, str)
+				j = i + 1
+				continue
+			}
+			if i == len(data)-1 {
+				str := string(data[j : i+1])
+				reply = append(reply, str)
+				ver = reply[0]
+			}
 		}
 	}
-	switch reply[0] {
+
+	switch ver {
+	case "/ping":
+		m := message.NewSendingMessage().Append(message.NewText("/pong"))
+		c.SendGroupMessage(msg.GroupCode, m)
 	case "/rand":
 		{
 			m := message.NewSendingMessage().Append(message.NewText(roll(reply[1:])))
@@ -131,7 +162,9 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 	case "/get":
 		{
 			newE := models.Get(msg.GroupCode)
-			m := message.NewSendingMessage().Append(message.NewGroupImage(newE.Id, newE.Md5, newE.Fid, newE.Size, newE.Width, newE.Height, newE.ImageType))
+			m := message.NewSendingMessage().
+				Append(message.NewText("https://gchat.qpic.cn/gchatpic_new/1/0-0-" + strings.ReplaceAll(binary.CalculateImageResourceId(newE.Md5)[1:37], "-", "") + "/0?term=2")).
+				Append(message.NewGroupImage(newE.Id, newE.Md5, newE.Fid, newE.Size, newE.Width, newE.Height, newE.ImageType))
 			c.SendGroupMessage(msg.GroupCode, m)
 		}
 	case "/help":
@@ -139,8 +172,52 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 			m := message.NewSendingMessage().Append(message.NewText("https://github.com/miyasereina/juryo"))
 			c.SendGroupMessage(msg.GroupCode, m)
 		}
+	case "/up[Reply":
+		{
+			n := 0
+			k := 0
+			for _, elem := range msg.Elements {
+				switch e := elem.(type) {
+				case *message.ReplyElement:
+					{
+
+						for _, el := range e.Elements {
+
+							switch ee := el.(type) {
+							case *message.GroupImageElement:
+								{
+									k++
+									models.Upload(ee, msg.GroupCode)
+									download(ee.Url, msg.GroupCode, ee.ImageId)
+									n++
+								}
+
+							}
+						}
+
+					}
+				default:
+					continue
+				}
+
+			}
+			m := message.NewSendingMessage().Append(message.NewText("识别到" + strconv.Itoa(k) + "张图片," + strconv.Itoa(n) + "张上传成功"))
+			c.SendGroupMessage(msg.GroupCode, m)
+		}
 
 	}
+
+}
+func morning(c *client.QQClient) {
+	cr := cron.New() // 新建一个定时任务对象
+	cr.AddFunc("* * * * * *", func() {
+		log.Println("hello world")
+	}) // 给对象增加定时任务
+	cr.Start()
+
+	m := message.NewSendingMessage().Append(message.NewText("妈妈早上好，最喜欢妈妈了妈妈今天也加油哦，快去叫爸爸起床！"))
+	c.SendGroupMessage(735214237, m)
+
 }
 
 func download(url string, path int64, fileName string) {
@@ -208,6 +285,7 @@ func roll(reply []string) string {
 func registerReply(b *bot.Bot) {
 	b.OnGroupMessage(func(qqClient *client.QQClient, groupMessage *message.GroupMessage) {
 		groupReply(groupMessage, qqClient)
+		//morning(groupMessage,qqClient)
 	})
 
 	b.OnPrivateMessage(func(qqClient *client.QQClient, privateMessage *message.PrivateMessage) {

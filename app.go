@@ -22,6 +22,7 @@ func init() {
 	models.TableInit()
 	replying.ReplyInit()
 	logging.Loginit()
+
 }
 
 func main() {
@@ -35,6 +36,7 @@ func main() {
 
 	//登录
 	bot.Login()
+	bot.SaveToken()
 	// 初始化 Modules
 	bot.StartService()
 	// 刷新好友列表，群列表
