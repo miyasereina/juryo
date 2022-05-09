@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/Mrs4s/MiraiGo/binary"
+	"github.com/robfig/cron"
 	"juryo/models"
-	"log"
 	"regexp"
 	"strings"
 
@@ -15,8 +15,6 @@ import (
 	"strconv"
 
 	"sync"
-
-	"github.com/robfig/cron"
 
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
@@ -95,12 +93,11 @@ func re(str string) []string {
 }
 
 func groupReply(msg *message.GroupMessage, c *client.QQClient) {
-	cr := cron.New() // 新建一个定时任务对象
-	cr.AddFunc("0 0 8 * * ? ", func() {
-		m := message.NewSendingMessage().Append(message.NewText("妈妈早上好，最喜欢妈妈了妈妈今天也加油哦，快去叫爸爸起床！"))
-		c.SendGroupMessage(735214237, m)
-	}) // 给对象增加定时任务
-	cr.Start()
+
+	o := &sync.Once{}
+	o.Do(func() {
+		Morning(c)
+	})
 	reply := []string{}
 	ver := ""
 	if re(msg.ToString()) != nil {
@@ -208,15 +205,25 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 	}
 
 }
-func morning(c *client.QQClient) {
-	cr := cron.New() // 新建一个定时任务对象
-	cr.AddFunc("* * * * * *", func() {
-		log.Println("hello world")
-	}) // 给对象增加定时任务
-	cr.Start()
 
-	m := message.NewSendingMessage().Append(message.NewText("妈妈早上好，最喜欢妈妈了妈妈今天也加油哦，快去叫爸爸起床！"))
-	c.SendGroupMessage(735214237, m)
+func Morning(c *client.QQClient) {
+	cr := cron.New()
+	// 把需要定时执行的函数都丢里面
+	// 设置时间分别是秒，分，时，日，月, 星期
+	cr.AddFunc("0 0 8 * * ? ", func() {
+		s := []string{
+			"妈妈早上好，最喜欢妈妈了妈妈今天也加油哦，快去叫爸爸起床！",
+			"nana想妈妈了，没有妈妈，nana好可怜，nana最喜欢妈妈了",
+			"橘蓼：蓉宝蓉宝蓉宝最喜欢蓉宝了，蓉宝今天也是元气慢慢的一天哦",
+			"橘蓼：蓉宝今天上班吧，如果不上班就来摸橘宝嘛，考试辛苦哭哭",
+			"おはようお母さんま,なな母いなくで寂しい,ハグほしい",
+			"橘蓼：蓉宝蓉宝蓉宝蓉宝起床了，太阳晒屁股了，该吃饭了哦",
+			"橘蓼：姐姐早上了哦，亲亲サワサワ、姉さんますごい可愛い，大好きだよ",
+		}
+		m := message.NewSendingMessage().Append(message.NewText(s[rand.Intn(len(s))]))
+		c.SendGroupMessage(735214237, m)
+	})
+	cr.Start()
 
 }
 
@@ -285,7 +292,6 @@ func roll(reply []string) string {
 func registerReply(b *bot.Bot) {
 	b.OnGroupMessage(func(qqClient *client.QQClient, groupMessage *message.GroupMessage) {
 		groupReply(groupMessage, qqClient)
-		//morning(groupMessage,qqClient)
 	})
 
 	b.OnPrivateMessage(func(qqClient *client.QQClient, privateMessage *message.PrivateMessage) {

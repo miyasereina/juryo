@@ -10,9 +10,8 @@ import (
 
 	"juryo/bot"
 	"juryo/config"
-	"juryo/utils"
-
 	_ "juryo/modules/logging"
+	"juryo/utils"
 )
 
 func init() {
@@ -28,7 +27,6 @@ func init() {
 func main() {
 	// 快速初始化
 	bot.Init()
-
 	// 使用协议
 	// 不同协议可能会有部分功能无法使用
 	// 在登陆前切换协议
