@@ -1,17 +1,13 @@
 package replying
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/Mrs4s/MiraiGo/binary"
-	"github.com/robfig/cron"
 	"juryo/models"
 	"regexp"
 	"strings"
 
 	"math/rand"
-	"net/http"
-	"os"
 	"strconv"
 
 	"sync"
@@ -36,7 +32,6 @@ func (a *ar) MiraiGoModule() bot.ModuleInfo {
 		Instance: instance,
 	}
 }
-
 func (a *ar) Init() {
 }
 
@@ -95,8 +90,7 @@ func re(str string) []string {
 var once sync.Once
 
 func groupReply(msg *message.GroupMessage, c *client.QQClient) {
-	Morning(c)
-	fmt.Println(S)
+	morning(c)
 	reply := []string{}
 	ver := ""
 	if re(msg.ToString()) != nil {
@@ -124,34 +118,18 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 			}
 		}
 	}
-
 	switch ver {
 	case "/ping":
 		m := message.NewSendingMessage().Append(message.NewText("/pong"))
 		c.SendGroupMessage(msg.GroupCode, m)
 	case "/rand":
 		{
-			m := message.NewSendingMessage().Append(message.NewText(roll(reply[1:])))
+			m := message.NewSendingMessage().Append(message.NewText("才不想告诉你应该选" + roll(reply[1:])))
 			c.SendGroupMessage(msg.GroupCode, m)
 		}
 	case "/up[Image:":
 		{
-			n := 0
-			k := 0
-			for _, elem := range msg.Elements {
-				switch e := elem.(type) {
-				case *message.GroupImageElement:
-					{
-						k++
-						models.Upload(e, msg.GroupCode)
-						download(e.Url, msg.GroupCode, e.ImageId)
-						n++
-					}
-				default:
-					continue
-				}
-
-			}
+			k, n := upImage(msg)
 			m := message.NewSendingMessage().Append(message.NewText("识别到" + strconv.Itoa(k) + "张图片," + strconv.Itoa(n) + "张上传成功"))
 			c.SendGroupMessage(msg.GroupCode, m)
 		}
@@ -168,131 +146,31 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 			m := message.NewSendingMessage().Append(message.NewText("https://github.com/miyasereina/juryo"))
 			c.SendGroupMessage(msg.GroupCode, m)
 		}
-	case "/up[Reply":
-		{
-			n := 0
-			k := 0
-			for _, elem := range msg.Elements {
-				switch e := elem.(type) {
-				case *message.ReplyElement:
-					{
 
-						for _, el := range e.Elements {
-
-							switch ee := el.(type) {
-							case *message.GroupImageElement:
-								{
-									k++
-									models.Upload(ee, msg.GroupCode)
-									download(ee.Url, msg.GroupCode, ee.ImageId)
-									n++
-								}
-
-							}
-						}
-
-					}
-				default:
-					continue
-				}
-
-			}
-			m := message.NewSendingMessage().Append(message.NewText("识别到" + strconv.Itoa(k) + "张图片," + strconv.Itoa(n) + "张上传成功"))
+	case "/今天":
+		if msg.GroupCode != 735214237 {
+			m := message.NewSendingMessage().Append(message.NewText("滚"))
+			c.SendGroupMessage(msg.GroupCode, m)
+		} else {
+			m := message.NewSendingMessage().Append(message.NewText(month()))
 			c.SendGroupMessage(msg.GroupCode, m)
 		}
 
-	}
+	case "/add":
+		add(reply)
+		m := message.NewSendingMessage().Append(message.NewText("已添加"))
+		c.SendGroupMessage(msg.GroupCode, m)
 
-}
-
-var S int
-
-func Morning(c *client.QQClient) {
-	cr := cron.New()
-	once.Do(func() {
-		S++
-		cr.AddFunc("0 52 8 * * ? ", func() {
-			s := []string{
-				"妈妈早上好，最喜欢妈妈了妈妈今天也加油哦，快去叫爸爸起床！",
-				"nana想妈妈了，没有妈妈，nana好可怜，nana最喜欢妈妈了",
-				"橘蓼：蓉宝蓉宝蓉宝最喜欢蓉宝了，蓉宝今天也是元气满满的一天哦",
-				"橘蓼：蓉宝今天上班吧，如果不上班就来摸橘宝嘛，考试辛苦哭哭",
-				"おはようお母さんま,なな母いなくで寂しい,ハグほしい",
-				"橘蓼：蓉宝蓉宝蓉宝蓉宝起床了，太阳晒屁股了，该吃饭了哦",
-				"橘蓼：姐姐早上了哦，亲亲サワサワ、姉さんますごい可愛い，大好きだよ",
-			} // 把需要定时执行的函数都丢里面
-			//设置时间分别是秒，分，时，日，月, 星期
-			m := message.NewSendingMessage().Append(message.NewText("520！！")).Append(message.NewText(s[rand.Intn(len(s))]))
-			c.SendGroupMessage(735214237, m)
-
-		})
-
-	})
-	cr.Start()
-
-}
-
-func download(url string, path int64, fileName string) {
-	imgPath := "images/" + strconv.Itoa(int(path))
-	_, err := os.Stat(imgPath)
-	if err != nil {
-		if os.IsExist(err) {
-			panic(err)
-		}
-
-		if os.IsNotExist(err) {
-			err = os.Mkdir(imgPath, 755)
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
-	res, err := http.Get(url)
-	if err != nil {
-		fmt.Println("A error occurred!")
-		return
-	}
-	defer res.Body.Close()
-	// 获得get请求响应的reader对象
-	reader := bufio.NewReaderSize(res.Body, 32*1024)
-
-	file, err := os.Create(imgPath + "/" + fileName)
-	if err != nil {
-		panic(err)
-	}
-	// 获得文件的writer对象
-	writer := bufio.NewWriter(file)
-	bytes := make([]byte, 32*1024)
-	for {
-		len, err := reader.Read(bytes)
-
-		if len < 0 || err != nil {
-			return
-		}
-		// 注意这里byte数组后的[0:len]，不然可能会导致写入多余的数据
-		_, _ = writer.Write(bytes[0:len])
-		fmt.Printf("%d ", len)
 	}
 
 }
 
 func roll(reply []string) string {
-	//var n uint8
-	//for _, value := range reply {
-	//	n = n ^ value=="".(uint8)
-	//}
-	if len(reply) <= 1 /*|| n == 0*/ {
+	if len(reply) <= 1 {
 		return "这rand尼玛呢rand"
 	}
 	return reply[rand.Intn(len(reply))]
 }
-
-//func upH(reply []string) string {
-//	msg:= *message.Image
-//	imag()
-//
-//	return "上传成功"
-//}
 
 func registerReply(b *bot.Bot) {
 	b.OnGroupMessage(func(qqClient *client.QQClient, groupMessage *message.GroupMessage) {
