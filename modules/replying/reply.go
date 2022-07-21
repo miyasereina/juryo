@@ -2,12 +2,9 @@ package replying
 
 import (
 	"fmt"
-	"github.com/Mrs4s/MiraiGo/binary"
 	"juryo/models"
-	"regexp"
-	"strings"
-
 	"math/rand"
+	"regexp"
 	"strconv"
 
 	"sync"
@@ -58,6 +55,7 @@ func privateReply(msg *message.PrivateMessage, c *client.QQClient) {
 	}
 	j := 0
 	data := []byte(msg.ToString())
+
 	reply := []string{}
 	//双指针遍历还原为数组
 	for i := 0; i <= len(data)-1; i++ {
@@ -135,9 +133,11 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 		}
 	case "/get":
 		{
+			fmt.Println("get")
 			newE := models.Get(msg.GroupCode)
+			url := "http://juryo.asakurayui.top/images/" + strconv.Itoa(int(msg.GroupCode)) + "/" + newE.Id
 			m := message.NewSendingMessage().
-				Append(message.NewText("https://gchat.qpic.cn/gchatpic_new/1/0-0-" + strings.ReplaceAll(binary.CalculateImageResourceId(newE.Md5)[1:37], "-", "") + "/0?term=2")).
+				Append(message.NewText(url)).
 				Append(message.NewGroupImage(newE.Id, newE.Md5, newE.Fid, newE.Size, newE.Width, newE.Height, newE.ImageType))
 			c.SendGroupMessage(msg.GroupCode, m)
 		}

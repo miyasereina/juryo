@@ -71,6 +71,7 @@ func upImage(msg *message.GroupMessage) (int, int) {
 							models.Upload(ee, msg.GroupCode)
 							download(ee.Url, msg.GroupCode, ee.ImageId)
 							n++
+							fmt.Println(k, n)
 						}
 
 					}
