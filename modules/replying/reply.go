@@ -138,7 +138,7 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 			url := "http://juryo.asakurayui.top/images/" + strconv.Itoa(int(msg.GroupCode)) + "/" + newE.Id
 			m := message.NewSendingMessage().
 				Append(message.NewText(url)).
-				Append(message.NewGroupImage(newE.Id, newE.Md5, newE.Fid, newE.Size, newE.Width, newE.Height, newE.ImageType))
+				Append(message.NewGroupImage(newE.Id, url, newE.Md5, newE.Fid, newE.Size, newE.Width, newE.Height, newE.ImageType))
 			c.SendGroupMessage(msg.GroupCode, m)
 		}
 	case "/help":
