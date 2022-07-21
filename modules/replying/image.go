@@ -59,23 +59,12 @@ func upImage(msg *message.GroupMessage) (int, int) {
 	k := 0
 	for _, elem := range msg.Elements {
 		switch e := elem.(type) {
-		case *message.ReplyElement:
+		case *message.GroupImageElement:
 			{
-
-				for _, el := range e.Elements {
-
-					switch ee := el.(type) {
-					case *message.GroupImageElement:
-						{
-							k++
-							models.Upload(ee, msg.GroupCode)
-							download(ee.Url, msg.GroupCode, ee.ImageId)
-							n++
-							fmt.Println(k, n)
-						}
-
-					}
-				}
+				k++
+				models.Upload(e, msg.GroupCode)
+				download(e.Url, msg.GroupCode, e.ImageId)
+				n++
 
 			}
 		default:
@@ -83,5 +72,6 @@ func upImage(msg *message.GroupMessage) (int, int) {
 		}
 
 	}
+
 	return n, k
 }

@@ -127,6 +127,7 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 		}
 	case "/up[Image:":
 		{
+
 			k, n := upImage(msg)
 			m := message.NewSendingMessage().Append(message.NewText("识别到" + strconv.Itoa(k) + "张图片," + strconv.Itoa(n) + "张上传成功"))
 			c.SendGroupMessage(msg.GroupCode, m)
