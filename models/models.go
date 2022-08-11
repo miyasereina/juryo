@@ -9,6 +9,7 @@ import (
 func TableInit() {
 	statements.ImageInit()
 	statements.MonthInit()
+	statements.ClockInit()
 	//add()
 }
 

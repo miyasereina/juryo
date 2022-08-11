@@ -6,4 +6,4 @@ device.json
 logs/
 
 images/
-dao/
+dao/mysqlconn.go

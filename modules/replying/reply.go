@@ -139,7 +139,7 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 			url := "http://juryo.asakurayui.top/images/" + strconv.Itoa(int(msg.GroupCode)) + "/" + newE.Id
 			m := message.NewSendingMessage().
 				Append(message.NewText(url)).
-				Append(message.NewGroupImage(newE.Id, url, newE.Md5, newE.Fid, newE.Size, newE.Width, newE.Height, newE.ImageType))
+				Append(message.NewGroupImage2(newE.Id, url, newE.Md5, newE.Fid, newE.Size, newE.Width, newE.Height, newE.ImageType))
 			c.SendGroupMessage(msg.GroupCode, m)
 		}
 	case "/help":
@@ -160,6 +160,9 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 	case "/add":
 		add(reply)
 		m := message.NewSendingMessage().Append(message.NewText("已添加"))
+		c.SendGroupMessage(msg.GroupCode, m)
+	case "/clock":
+		m := message.NewSendingMessage().Append(message.NewText(Clock(msg.Sender.Nickname)))
 		c.SendGroupMessage(msg.GroupCode, m)
 
 	}

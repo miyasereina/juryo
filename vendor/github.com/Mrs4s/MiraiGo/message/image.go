@@ -1,7 +1,7 @@
 package message
 
 import (
-
+	"strings"
 
 	"github.com/Mrs4s/MiraiGo/binary"
 	"github.com/Mrs4s/MiraiGo/client/pb/msg"
@@ -64,7 +64,7 @@ const (
 
 /* ------ Implementations ------ */
 
-func NewGroupImage(id,url string, md5 []byte, fid int64, size, width, height, imageType int32) *GroupImageElement {
+func NewGroupImage(id string, md5 []byte, fid int64, size, width, height, imageType int32) *GroupImageElement {
 	return &GroupImageElement{
 		ImageId:   id,
 		FileId:    fid,
@@ -73,7 +73,19 @@ func NewGroupImage(id,url string, md5 []byte, fid int64, size, width, height, im
 		ImageType: imageType,
 		Width:     width,
 		Height:    height,
-		Url:       url,
+		Url:       "https://gchat.qpic.cn/gchatpic_new/1/0-0-" + strings.ReplaceAll(binary.CalculateImageResourceId(md5)[1:37], "-", "") + "/0?term=2",
+	}
+}
+func NewGroupImage2(id,url string, md5 []byte, fid int64, size, width, height, imageType int32) *GroupImageElement {
+	return &GroupImageElement{
+		ImageId:   id,
+		FileId:    fid,
+		Md5:       md5,
+		Size:      size,
+		ImageType: imageType,
+		Width:     width,
+		Height:    height,
+		Url:      	url,
 	}
 }
 
