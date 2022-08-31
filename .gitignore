@@ -4,6 +4,6 @@ application.yaml
 device.json
 
 logs/
-
+go.mod
 images/
 dao/mysqlconn.go

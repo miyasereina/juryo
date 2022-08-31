@@ -23,6 +23,10 @@ func Insert(user string, dur time.Duration) (string, error) {
 	rediscli := dao.RedisClient
 	timeChannel := time.After(dur)
 	auto := rediscli.Get(ctx, "auto").Val()
+	e := rediscli.Get(ctx, "auto").Err()
+	if e != nil {
+		return "", e
+	}
 	if auto == "" {
 		return "1", err
 	}
@@ -30,15 +34,22 @@ func Insert(user string, dur time.Duration) (string, error) {
 	go func() {
 		select {
 		case <-timeChannel:
-			auto := rediscli.Get(ctx, "auto").Val()
-			if auto == "" {
+			aut := rediscli.Get(ctx, "auto").Val()
+			r := rediscli.Get(ctx, "auto").Err()
+			if r != nil {
+				panic(r)
+			}
+			if aut == "" {
 				er := rediscli.SetEX(ctx, "auto", "1", time.Hour*24).Err()
 				if er != nil {
 					panic(er)
 				}
 			} else {
 				v, _ := strconv.Atoi(auto)
-				rediscli.SetEX(ctx, "auto", strconv.Itoa(v+1), time.Hour*24)
+				er := rediscli.SetEX(ctx, "auto", v+1, time.Hour*24).Err()
+				if er != nil {
+					panic(er)
+				}
 
 			}
 		}
