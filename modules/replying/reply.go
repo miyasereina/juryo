@@ -220,12 +220,19 @@ func roll(reply []string) string {
 	return reply[rand.Intn(len(reply))]
 }
 
+type postform struct {
+	R18   string   `json:"r18"`
+	Proxy string   `json:"proxy"`
+	Tag   []string `json:"tag"`
+}
+
 func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
-	form := make(map[string]interface{})
-	form["R18"] = r18
-	form["proxy"] = "i.pixiv.re"
+	var form postform
+	fmt.Println(r18)
+	form.R18 = r18
+	form.Proxy = "i.pixiv.re"
 	if len(tags) != 0 {
-		form["Tag"] = tags
+		form.Tag = tags
 	}
 
 	bytesData, err := json.Marshal(form)
