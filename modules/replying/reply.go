@@ -1,9 +1,13 @@
 package replying
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"juryo/models"
 	"math/rand"
+	"net/http"
 	"regexp"
 	"strconv"
 
@@ -87,12 +91,24 @@ func re(str string) []string {
 
 var once sync.Once
 
+type imageUploadResponse struct {
+	UploadKey  []byte
+	UploadIp   []uint32
+	UploadPort []uint32
+	ResourceId string
+	Message    string
+	FileId     int64
+	Width      int32
+	Height     int32
+	ResultCode int32
+	IsExists   bool
+}
+
 func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 	morning(c)
 	reply := []string{}
 	ver := ""
 	if re(msg.ToString()) != nil {
-		fmt.Println(re(msg.ToString()))
 		ver = re(msg.ToString())[0][0:9]
 	} else {
 		if []byte(msg.ToString())[0] != '/' {
@@ -125,6 +141,35 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 			m := message.NewSendingMessage().Append(message.NewText("才不想告诉你应该选" + roll(reply[1:])))
 			c.SendGroupMessage(msg.GroupCode, m)
 		}
+	case "/setu":
+		{
+			var r18 string
+			n := len(reply)
+			_, err := strconv.Atoi(reply[n-1])
+			if err != nil {
+				r18 = "0"
+			}
+			var img Img
+			var r io.ReadSeeker
+			if n <= 1 {
+				r18 = "0"
+				img, r = getsetu(r18, nil)
+			} else {
+				r18 = reply[n-1]
+				img, r = getsetu(r18, reply[1:n-1])
+			}
+			imgItem, err := c.UploadGroupImage(msg.GroupCode, r)
+			if err != nil {
+				panic(err)
+			}
+			m := message.NewSendingMessage().
+				Append(message.NewText("[pid]:" + strconv.Itoa(img.Pid) + "")).
+				Append(message.NewText("[老师]:" + img.Author)).
+				Append(message.NewText(img.Urls.Original)).
+				Append(imgItem)
+			c.SendGroupMessage(msg.GroupCode, m)
+
+		}
 	case "/up[Image:":
 		{
 
@@ -134,12 +179,11 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 		}
 	case "/get":
 		{
-			fmt.Println("get")
 			newE := models.Get(msg.GroupCode)
 			url := "http://juryo.asakurayui.top/images/" + strconv.Itoa(int(msg.GroupCode)) + "/" + newE.Id
 			m := message.NewSendingMessage().
 				Append(message.NewText(url)).
-				Append(message.NewGroupImage2(newE.Id, url, newE.Md5, newE.Fid, newE.Size, newE.Width, newE.Height, newE.ImageType))
+				Append(NewGroupImage(newE.Id, url, newE.Md5, newE.Fid, newE.Size, newE.Width, newE.Height, newE.ImageType))
 			c.SendGroupMessage(msg.GroupCode, m)
 		}
 	case "/help":
@@ -176,6 +220,73 @@ func roll(reply []string) string {
 	return reply[rand.Intn(len(reply))]
 }
 
+func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
+	form := make(map[string]interface{})
+	form["R18"] = r18
+	form["proxy"] = "i.pixiv.re"
+	if len(tags) != 0 {
+		form["Tag"] = tags
+	}
+
+	bytesData, err := json.Marshal(form)
+	req, _ := http.NewRequest("POST", "https://api.lolicon.app/setu/v2", bytes.NewReader(bytesData))
+	req.Header.Set("Content-Type", "application/json;charset=UTF-8")
+	rsp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	byts, err := io.ReadAll(rsp.Body)
+	if err != nil {
+		panic(err)
+	}
+	var data Data
+	err = json.Unmarshal(byts, &data)
+	if err != nil {
+		panic(err)
+	}
+	img := data.Data[0]
+	fmt.Println(img)
+	resp, err := http.Get(img.Urls.Original)
+
+	defer func() {
+		e := resp.Body.Close()
+		if e != nil {
+			panic(e)
+		}
+		e = rsp.Body.Close()
+		if e != nil {
+			panic(e)
+		}
+	}()
+	bs, _ := io.ReadAll(resp.Body)
+	reader := bytes.NewReader(bs)
+
+	return img, reader
+}
+
+type Data struct {
+	Data []Img `json:"data"`
+}
+
+type Img struct {
+	Pid        int      `json:"pid"`         //作品 pid
+	P          int      `json:"p"`           //作品所在页
+	Uid        int      `json:"uid"`         //作者 uid
+	Title      string   `json:"title"`       //作品标题
+	Author     string   `json:"author"`      //作者名（入库时，并过滤掉 @ 及其后内容）
+	R18        bool     `json:"r_18"`        //是否 R18（在库中的分类，不等同于作品本身的 R18 标识）
+	Width      int      `json:"width"`       //原图宽度 px
+	Height     int      `json:"height"`      //原图高度 px
+	Tags       []string `json:"tags"`        //作品标签，包含标签的中文翻译（有的话）
+	Ext        string   `json:"ext"`         //图片扩展名
+	UploadDate int      `json:"upload_date"` //作品上传日期；时间戳，单位为毫秒
+	Urls       object   `json:"urls"`        //包含了所有指定size的图片地址
+}
+type object struct {
+	Original string
+}
+
 func registerReply(b *bot.Bot) {
 	b.OnGroupMessage(func(qqClient *client.QQClient, groupMessage *message.GroupMessage) {
 		groupReply(groupMessage, qqClient)
@@ -185,4 +296,17 @@ func registerReply(b *bot.Bot) {
 		privateReply(privateMessage, qqClient)
 	})
 
+}
+
+func NewGroupImage(id, url string, md5 []byte, fid int64, size, width, height, imageType int32) *message.GroupImageElement {
+	return &message.GroupImageElement{
+		ImageId:   id,
+		FileId:    fid,
+		Md5:       md5,
+		Size:      size,
+		ImageType: imageType,
+		Width:     width,
+		Height:    height,
+		Url:       url,
+	}
 }

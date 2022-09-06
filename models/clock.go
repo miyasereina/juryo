@@ -14,19 +14,15 @@ func Insert(user string, dur time.Duration) (string, error) {
 	db := dao.MysqlConn()
 	clock := statements.Clock{}
 	db.Table("clock").Last(&clock)
-	if clock.Name == user && clock.CreatedAt.Day() == time.Now().Day() {
+	/*if clock.Name == user && clock.CreatedAt.Day() == time.Now().Day() {
 		return "笨蛋" + user + "今天已经打过卡了哦", nil
-	}
+	}*/
 	err := db.Table("clock").Create(&statements.Clock{
 		Name: user,
 	}).Error
 	rediscli := dao.RedisClient
 	timeChannel := time.After(dur)
 	auto := rediscli.Get(ctx, "auto").Val()
-	e := rediscli.Get(ctx, "auto").Err()
-	if e != nil {
-		return "", e
-	}
 	if auto == "" {
 		return "1", err
 	}

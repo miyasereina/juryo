@@ -48,7 +48,7 @@ func add(ti []string) {
 }
 func Clock(name string) string {
 	t := time.Now()
-	t_zero := time.Date(t.Year(), t.Month(), t.Day(), 9, 0, 0, 0, t.Location())
+	t_zero := time.Date(t.Year(), t.Month(), t.Day(), 20, 57, 0, 0, t.Location())
 	t_ := t.Sub(t_zero)
 	if t_ > 0 {
 		return "笨笨蓉才起床"
