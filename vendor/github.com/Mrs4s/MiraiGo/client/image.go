@@ -3,13 +3,14 @@ package client
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/pkg/errors"
 	"image"
 	"io"
 	"math/rand"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/Mrs4s/MiraiGo/binary"
 	"github.com/Mrs4s/MiraiGo/client/internal/highway"
@@ -47,20 +48,17 @@ func (c *QQClient) UploadGroupImage(groupCode int64, img io.ReadSeeker) (*messag
 	_, _ = img.Seek(0, io.SeekStart) // safe
 	fh, length := utils.ComputeMd5AndLength(img)
 	_, _ = img.Seek(0, io.SeekStart)
+
 	key := string(fh)
 	imgWaiter.Wait(key)
 	defer imgWaiter.Done(key)
 
-
 	seq, pkt := c.buildGroupImageStorePacket(groupCode, fh, int32(length))
-
 	r, err := c.sendAndWait(seq, pkt)
-
 	if err != nil {
 		return nil, err
 	}
 	rsp := r.(*imageUploadResponse)
-
 	if rsp.ResultCode != 0 {
 		return nil, errors.New(rsp.Message)
 	}
@@ -70,7 +68,6 @@ func (c *QQClient) UploadGroupImage(groupCode int64, img io.ReadSeeker) (*messag
 	if c.highwaySession.AddrLength() == 0 {
 		for i, addr := range rsp.UploadIp {
 			c.highwaySession.AppendAddr(addr, rsp.UploadPort[i])
-
 		}
 	}
 	if _, err = c.highwaySession.UploadBDH(highway.BdhInput{

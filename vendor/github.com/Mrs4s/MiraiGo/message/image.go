@@ -77,7 +77,6 @@ func NewGroupImage(id string, md5 []byte, fid int64, size, width, height, imageT
 	}
 }
 
-
 func (e *GroupImageElement) Type() ElementType {
 	return Image
 }
