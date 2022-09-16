@@ -226,10 +226,10 @@ func roll(reply []string) string {
 }
 
 type postform struct {
-	R18 string `json:"r18"`
-	//Proxy string   `json:"proxy"`
-	Tag  []string `json:"tag"`
-	size string   `json:"size"`
+	R18   string   `json:"r18"`
+	Proxy string   `json:"proxy"`
+	Tag   []string `json:"tag"`
+	size  string   `json:"size"`
 }
 
 func proxy(rawurl string) io.ReadSeeker {
@@ -238,8 +238,6 @@ func proxy(rawurl string) io.ReadSeeker {
 	if err != nil {
 		log.Fatal("parse url error: ", err)
 	}
-	fmt.Println(uri.User)
-
 	client := http.Client{
 		Transport: &http.Transport{
 			// 设置代理
@@ -256,7 +254,7 @@ func proxy(rawurl string) io.ReadSeeker {
 	}
 	defer resp.Body.Close()
 	data, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("%v", "done")
+	fmt.Printf("%v", "done")
 	return bytes.NewReader(data)
 
 }
@@ -264,6 +262,7 @@ func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
 	var form postform
 	fmt.Println(r18)
 	form.R18 = r18
+	form.Proxy = "i.pixiv.re"
 	if len(tags) != 0 {
 		form.Tag = tags
 	}
@@ -285,7 +284,7 @@ func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
 		panic(err)
 	}
 	img := data.Data[0]
-	fmt.Println("%v", "done")
+	fmt.Printf("%v", "done")
 	return img, proxy(img.Urls.Original)
 }
 
