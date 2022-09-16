@@ -164,6 +164,7 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 				}
 
 			}
+
 			if errs != nil {
 				m := message.NewSendingMessage().
 					Append(message.NewText("上传失败\n")).
@@ -172,6 +173,7 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 				return
 			}
 			imgItem, err := c.UploadGroupImage(msg.GroupCode, r)
+			logrus.Info("upload done")
 			if err != nil {
 				m := message.NewSendingMessage().
 					Append(message.NewText("上传失败\n")).
