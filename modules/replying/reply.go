@@ -148,7 +148,6 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 		{
 			var r18 string
 			n := len(reply)
-
 			var img Img
 			var r io.ReadSeeker
 			if n <= 1 {
@@ -157,9 +156,9 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 			} else {
 				_, err := strconv.Atoi(reply[n-1])
 				if err != nil {
-					img, r = getsetu("0", reply[1:n])
+					img, r = getsetu("0", reply[1:])
 				} else {
-					img, r = getsetu(r18, reply[1:n-1])
+					img, r = getsetu(reply[n-1], reply[1:n-1])
 				}
 
 			}
