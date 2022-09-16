@@ -3,6 +3,7 @@ package replying
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"juryo/models"
@@ -257,7 +258,7 @@ func proxy(rawurl string) io.ReadSeeker {
 	defer resp.Body.Close()
 	defer client.CloseIdleConnections()
 	data, _ := ioutil.ReadAll(resp.Body)
-	log.Printf("proxy done")
+	logrus.Info("proxy done")
 	return bytes.NewReader(data)
 
 }
@@ -269,7 +270,7 @@ func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
 		form.Tag = tags
 	}
 	form.size = "small"
-	log.Printf("postform:%v", form)
+	logrus.Infof("postform:%v", form)
 	bytesData, err := json.Marshal(form)
 	req, _ := http.NewRequest("POST", "https://api.lolicon.app/setu/v2", bytes.NewReader(bytesData))
 	req.Header.Set("Content-Type", "application/json;charset=UTF-8")
@@ -287,7 +288,7 @@ func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
 		panic(err)
 	}
 	img := data.Data[0]
-	log.Printf("getsetu done")
+	logrus.Info("getsetu done")
 	return img, proxy(img.Urls.Original)
 }
 
