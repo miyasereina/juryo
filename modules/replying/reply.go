@@ -253,6 +253,7 @@ func proxy(rawurl string) io.ReadSeeker {
 		panic(err)
 	}
 	defer resp.Body.Close()
+	defer client.CloseIdleConnections()
 	data, _ := ioutil.ReadAll(resp.Body)
 	fmt.Printf("%v", "done")
 	return bytes.NewReader(data)
