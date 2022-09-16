@@ -3,6 +3,7 @@ package replying
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
@@ -147,20 +148,28 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 	case "/setu":
 		{
 			var r18 string
+			var errs error
 			n := len(reply)
 			var img Img
 			var r io.ReadSeeker
 			if n <= 1 {
 				r18 = "0"
-				img, r = getsetu(r18, nil)
+				img, r, errs = getsetu(r18, nil)
 			} else {
 				_, err := strconv.Atoi(reply[n-1])
 				if err != nil {
-					img, r = getsetu("0", reply[1:])
+					img, r, errs = getsetu("0", reply[1:])
 				} else {
-					img, r = getsetu(reply[n-1], reply[1:n-1])
+					img, r, errs = getsetu(reply[n-1], reply[1:n-1])
 				}
 
+			}
+			if errs != nil {
+				m := message.NewSendingMessage().
+					Append(message.NewText("上传失败\n")).
+					Append(message.NewText("error:" + errs.Error()))
+				c.SendGroupMessage(msg.GroupCode, m)
+				return
 			}
 			imgItem, err := c.UploadGroupImage(msg.GroupCode, r)
 			if err != nil {
@@ -261,7 +270,7 @@ func proxy(rawurl string) io.ReadSeeker {
 	return bytes.NewReader(data)
 
 }
-func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
+func getsetu(r18 string, tags []string) (Img, io.ReadSeeker, error) {
 	var form postform
 	form.R18 = r18
 	form.Proxy = "i.pixiv.re"
@@ -275,20 +284,24 @@ func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
 	req.Header.Set("Content-Type", "application/json;charset=UTF-8")
 	rsp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		panic(err)
+		return Img{}, nil, err
 	}
 	byts, err := io.ReadAll(rsp.Body)
 	if err != nil {
-		panic(err)
+		return Img{}, nil, err
 	}
 	var data Data
 	err = json.Unmarshal(byts, &data)
 	if err != nil {
-		panic(err)
+		return Img{}, nil, err
+	}
+	if len(data.Data) == 0 {
+		return Img{}, nil, fmt.Errorf("%v", "setu 404 not found")
 	}
 	img := data.Data[0]
 	logrus.Info("getsetu done")
-	return img, proxy(img.Urls.Original)
+
+	return img, proxy(img.Urls.Original), err
 }
 
 type Data struct {
