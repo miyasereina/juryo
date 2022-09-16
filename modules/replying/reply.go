@@ -3,7 +3,6 @@ package replying
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"juryo/models"
@@ -165,7 +164,11 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 			}
 			imgItem, err := c.UploadGroupImage(msg.GroupCode, r)
 			if err != nil {
-				panic(err)
+				m := message.NewSendingMessage().
+					Append(message.NewText("上传失败\n")).
+					Append(message.NewText("error:" + err.Error()))
+				c.SendGroupMessage(msg.GroupCode, m)
+				return
 			}
 			m := message.NewSendingMessage().
 				Append(message.NewText("[pid]:" + strconv.Itoa(img.Pid) + "\n")).
@@ -234,7 +237,6 @@ type postform struct {
 
 func proxy(rawurl string) io.ReadSeeker {
 	uri, err := url.Parse("http://127.0.0.1:7890")
-
 	if err != nil {
 		log.Fatal("parse url error: ", err)
 	}
@@ -255,19 +257,19 @@ func proxy(rawurl string) io.ReadSeeker {
 	defer resp.Body.Close()
 	defer client.CloseIdleConnections()
 	data, _ := ioutil.ReadAll(resp.Body)
-	fmt.Printf("%v", "done")
+	log.Printf("proxy done")
 	return bytes.NewReader(data)
 
 }
 func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
 	var form postform
-	fmt.Println(r18)
 	form.R18 = r18
 	form.Proxy = "i.pixiv.re"
 	if len(tags) != 0 {
 		form.Tag = tags
 	}
 	form.size = "small"
+	log.Printf("postform:%v", form)
 	bytesData, err := json.Marshal(form)
 	req, _ := http.NewRequest("POST", "https://api.lolicon.app/setu/v2", bytes.NewReader(bytesData))
 	req.Header.Set("Content-Type", "application/json;charset=UTF-8")
@@ -285,7 +287,7 @@ func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
 		panic(err)
 	}
 	img := data.Data[0]
-	fmt.Printf("%v", "done")
+	log.Printf("getsetu done")
 	return img, proxy(img.Urls.Original)
 }
 
