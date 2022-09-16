@@ -148,17 +148,19 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 		{
 			var r18 string
 			n := len(reply)
-			_, err := strconv.Atoi(reply[n-1])
-			if err != nil {
-				r18 = "0"
-			}
+
 			var img Img
 			var r io.ReadSeeker
 			if n <= 1 {
 				r18 = "0"
 				img, r = getsetu(r18, nil)
 			} else {
-				r18 = reply[n-1]
+				_, err := strconv.Atoi(reply[n-1])
+				if err != nil {
+					r18 = "0"
+				} else {
+					r18 = reply[n-1]
+				}
 				img, r = getsetu(r18, reply[1:n-1])
 			}
 			imgItem, err := c.UploadGroupImage(msg.GroupCode, r)
@@ -166,7 +168,7 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 				panic(err)
 			}
 			m := message.NewSendingMessage().
-				Append(message.NewText("[pid]:" + strconv.Itoa(img.Pid) + "")).
+				Append(message.NewText("[pid]:" + strconv.Itoa(img.Pid) + "\n")).
 				Append(message.NewText("[老师]:" + img.Author)).
 				Append(message.NewText(img.Urls.Original)).
 				Append(imgItem)
@@ -224,10 +226,10 @@ func roll(reply []string) string {
 }
 
 type postform struct {
-	R18   string   `json:"r18"`
-	Proxy string   `json:"proxy"`
-	Tag   []string `json:"tag"`
-	size  string   `json:"size"`
+	R18 string `json:"r18"`
+	//Proxy string   `json:"proxy"`
+	Tag  []string `json:"tag"`
+	size string   `json:"size"`
 }
 
 func proxy(rawurl string) io.ReadSeeker {
@@ -254,6 +256,7 @@ func proxy(rawurl string) io.ReadSeeker {
 	}
 	defer resp.Body.Close()
 	data, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println("%v", "done")
 	return bytes.NewReader(data)
 
 }
@@ -261,11 +264,10 @@ func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
 	var form postform
 	fmt.Println(r18)
 	form.R18 = r18
-	form.Proxy = "i.pixiv.re"
 	if len(tags) != 0 {
 		form.Tag = tags
 	}
-	form.size = "regular"
+	form.size = "small"
 	bytesData, err := json.Marshal(form)
 	req, _ := http.NewRequest("POST", "https://api.lolicon.app/setu/v2", bytes.NewReader(bytesData))
 	req.Header.Set("Content-Type", "application/json;charset=UTF-8")
@@ -273,7 +275,6 @@ func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
 	if err != nil {
 		panic(err)
 	}
-
 	byts, err := io.ReadAll(rsp.Body)
 	if err != nil {
 		panic(err)
@@ -284,7 +285,7 @@ func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
 		panic(err)
 	}
 	img := data.Data[0]
-	fmt.Println(img)
+	fmt.Println("%v", "done")
 	return img, proxy(img.Urls.Original)
 }
 
