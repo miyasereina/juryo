@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"juryo/models"
+	"log"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 
@@ -227,6 +230,33 @@ type postform struct {
 	size  string   `json:"size"`
 }
 
+func proxy(rawurl string) io.ReadSeeker {
+	uri, err := url.Parse("http://127.0.0.1:7890")
+
+	if err != nil {
+		log.Fatal("parse url error: ", err)
+	}
+	fmt.Println(uri.User)
+
+	client := http.Client{
+		Transport: &http.Transport{
+			// 设置代理
+			Proxy: http.ProxyURL(uri),
+		},
+	}
+	//client:=http.Client{}
+	req := http.Request{}
+	req.Method = "GET"
+	req.URL, _ = url.Parse(rawurl)
+	resp, err := client.Do(&req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	data, _ := ioutil.ReadAll(resp.Body)
+	return bytes.NewReader(data)
+
+}
 func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
 	var form postform
 	fmt.Println(r18)
@@ -255,22 +285,7 @@ func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
 	}
 	img := data.Data[0]
 	fmt.Println(img)
-	resp, err := http.Get(img.Urls.Original)
-
-	defer func() {
-		e := resp.Body.Close()
-		if e != nil {
-			panic(e)
-		}
-		e = rsp.Body.Close()
-		if e != nil {
-			panic(e)
-		}
-	}()
-	bs, _ := io.ReadAll(resp.Body)
-	reader := bytes.NewReader(bs)
-
-	return img, reader
+	return img, proxy(img.Urls.Original)
 }
 
 type Data struct {
