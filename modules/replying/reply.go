@@ -182,6 +182,7 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 				return
 			}
 			m := message.NewSendingMessage().
+				Append(message.NewReply(msg)).
 				Append(message.NewText("[pid]:" + strconv.Itoa(img.Pid) + "\n")).
 				Append(message.NewText("[老师]:" + img.Author)).
 				Append(message.NewText(img.Urls.Original)).
