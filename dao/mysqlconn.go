@@ -9,8 +9,8 @@ var DB *gorm.DB
 
 func MysqlInit() {
 	dbName := "bot"
-	user := "root"
-	password := "reina0526"
+	user := "bot"
+	password := "@Reina0526"
 	port := "127.0.0.1"
 	dbInfo := user + ":" + password + "@tcp(" + port + ")/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local&timeout=10s"
 

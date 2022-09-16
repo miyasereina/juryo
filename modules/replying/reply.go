@@ -224,6 +224,7 @@ type postform struct {
 	R18   string   `json:"r18"`
 	Proxy string   `json:"proxy"`
 	Tag   []string `json:"tag"`
+	size  string   `json:"size"`
 }
 
 func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
@@ -234,7 +235,7 @@ func getsetu(r18 string, tags []string) (Img, io.ReadSeeker) {
 	if len(tags) != 0 {
 		form.Tag = tags
 	}
-
+	form.size = "regular"
 	bytesData, err := json.Marshal(form)
 	req, _ := http.NewRequest("POST", "https://api.lolicon.app/setu/v2", bytes.NewReader(bytesData))
 	req.Header.Set("Content-Type", "application/json;charset=UTF-8")
