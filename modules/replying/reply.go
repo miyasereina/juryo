@@ -156,11 +156,11 @@ func groupReply(msg *message.GroupMessage, c *client.QQClient) {
 			} else {
 				_, err := strconv.Atoi(reply[n-1])
 				if err != nil {
-					r18 = "0"
+					img, r = getsetu("0", reply[1:n])
 				} else {
-					r18 = reply[n-1]
+					img, r = getsetu(r18, reply[1:n-1])
 				}
-				img, r = getsetu(r18, reply[1:n-1])
+
 			}
 			imgItem, err := c.UploadGroupImage(msg.GroupCode, r)
 			if err != nil {
