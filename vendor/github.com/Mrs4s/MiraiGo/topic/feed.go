@@ -62,7 +62,7 @@ var globalBlockId int64 = 0
 
 func genBlockId() string {
 	id := atomic.AddInt64(&globalBlockId, 1)
-	return fmt.Sprintf("%v_%v_%v", time.Now().UnixNano(), utils.RandomStringRange(4, "0123456789"), id)
+	return fmt.Sprintf("%v_%v_%v", time.Now().UnixMilli(), utils.RandomStringRange(4, "0123456789"), id)
 }
 
 func (f *Feed) ToSendingPayload(selfUin int64) string {
